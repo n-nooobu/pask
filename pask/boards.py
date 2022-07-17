@@ -70,7 +70,7 @@ def add_board(n_clicks, board_name):
             new_board = dbc.Card(className='card_board', children=[
                 dbc.CardBody([
                     html.H4(board_name),
-                    dbc.Button("Open", outline=True, color="warning", href='/board/sample')
+                    dbc.Button("Open", outline=True, color="warning", href=f'/board/{board_name}')
                 ])
             ])
             boards.insert(-1, new_board)
