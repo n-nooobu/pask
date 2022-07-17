@@ -1,0 +1,52 @@
+.page {
+    margin-top: 5rem;
+    margin-left: 2rem;
+    margin-right: 2rem;
+}
+
+.list {
+    width: 300px;
+    border-radius: 5px;
+    padding: 10px;
+    margin-left: 0.3rem;
+    margin-right: 0.3rem;
+    display: inline-block;
+}
+
+.card_board {
+    margin-top: 0.6rem;
+    margin-bottom: 0.6rem;
+}
+
+.card {
+    margin-top: 0.3rem;
+    margin-bottom: 0.3rem;
+}
+
+.button_add_board {
+    border-radius: 5px;
+    padding: 10px;
+    margin-top: 0.6rem;
+    margin-bottom: 0.6rem;
+}
+
+.button_add_list {
+    width: 170px;
+    border-radius: 5px;
+    padding: 10px;
+    margin-left: 0.3rem;
+    margin-right: 0.3rem;
+}
+
+.button_add_card {
+    width: 270px;
+    border-radius: 5px;
+    padding: 10px;
+    margin-left: 0.3rem;
+    margin-right: 0.3rem;
+}
+
+.button_in_card {
+    width: 30px;
+    height: 30px;
+}
