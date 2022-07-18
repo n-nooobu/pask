@@ -19,6 +19,8 @@ def layout():
     global boards
     boards = []
     for json_path in DATA_DIR.glob('*.json'):
+        if json_path.stem == 'category':
+            continue
         board = dbc.Card(className='card_board', children=[
             dbc.CardBody([
                 html.H4(json_path.stem),
