@@ -27,7 +27,7 @@ header = dbc.Navbar(
                 dbc.Nav(className='w-100', children=[
                     dbc.NavItem(dbc.NavLink('Boards', href='/boards', active='exact')),
                     dbc.NavItem(
-                        dbc.NavLink('DePOCH', href='/depoch', active='exact'),
+                        dbc.NavLink('Timeline', href='/timeline', active='exact'),
                         className='me-auto',
                     ),
                     dbc.NavItem(dbc.NavLink('About', href='/about', active='exact')),

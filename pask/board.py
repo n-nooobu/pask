@@ -1,9 +1,9 @@
 import os
 from pathlib import Path
 import json
-from sre_constants import CATEGORY
 import string
 import random
+import urllib.parse
 from datetime import datetime, date, timezone, timedelta
 import dash
 from dash import dcc, html, Input, Output, State, MATCH, ALL
@@ -17,7 +17,7 @@ dash.register_page(__name__, path_template='/board/<board_name>')
 DATA_DIR = Path(f'{os.path.dirname(__file__)}/data')
 BOARD_DATA, CATEGORY_DATA, OPTIONS = None, None, None
 PREV_N1, PREV_N2, PREV_N_ADD_LIST, PREV_N_CARD_TO_LEFT, PREV_N_CARD_TO_RIGHT = 0, 0, 0, 0, 0
-PREV_N_ADD_CARD, PREV_N_ADD_ENTRY, PREV_N1_CARD, PREV_N2_CARD, PREV_N3_CARD = {}, {}, {}, {}, {}
+PREV_N_ADD_CARD, PREV_N_ADD_ENTRY, PREV_N1_CARD, PREV_N2_CARD, PREV_N3_CARD, PREV_N4_CARD = {}, {}, {}, {}, {}, {}
 PREV_N_LIST_TO_LEFT, PREV_N_LIST_TO_RIGHT = None, None
 
 
@@ -25,15 +25,21 @@ def layout(board_name=None):
     global BOARD_DATA
     global CATEGORY_DATA
     global OPTIONS
+    global PREV_N_ADD_LIST
     global PREV_N_LIST_TO_LEFT
     global PREV_N_LIST_TO_RIGHT
 
     if board_name:
+        board_name = urllib.parse.unquote(board_name)
         json_path = DATA_DIR/f'{board_name}.json'
         with open(json_path, 'r', encoding='utf-8') as f:
             BOARD_DATA = json.load(f)
-        with open(DATA_DIR/'category.json', 'r', encoding='utf-8') as f:
-            CATEGORY_DATA = json.load(f)
+        category_path = DATA_DIR/'category.json'
+        if not category_path.exists():
+            CATEGORY_DATA = {}
+        else:
+            with open(DATA_DIR/'category.json', 'r', encoding='utf-8') as f:
+                CATEGORY_DATA = json.load(f)
         OPTIONS = [{'label': None, 'value': None}] + [{'label': f'{key}: {value["desc"]}', 'value': key} for key, value in CATEGORY_DATA.items()]
 
         lists = []
@@ -105,26 +111,27 @@ def layout(board_name=None):
 
                     entries.append(
                         dbc.Card(id={'type': 'entry', 'index': entry_id}, className='card', children=[
-                            dbc.Row(justify='between', children=[
-                                dbc.Col(width={'size': 11}, children=[
+                            dbc.Row(justify='between', className='entry', children=[
+                                dbc.Col(width={'size': 10}, children=[
                                     dbc.Input(id={'type': 'entry-desc', 'index': entry_id}, size='sm', value=entry_data['desc'], className='entry', type='text'),
                                 ]),
-                                dbc.Col(width={'size': 'auto'}, className='entry', children=[
-                                    dbc.Row([
-                                        dcc.DatePickerRange(
-                                            id={'type': 'entry-date-picker-range', 'index': entry_id}, className='date_picker_range',
-                                            display_format='Y/M/D', month_format='Y/M',
-                                            initial_visible_month=now, start_date=start, end_date=end,
-                                        ),
-                                    ]),
-                                    dbc.Row([
-                                        dbc.Col([
-                                            dmc.TimeInput(id={'type': 'time-input-start-entry', 'index': entry_id}, value=start, class_name='time_input_in_card')
-                                        ]),
-                                        dbc.Col([
-                                            dmc.TimeInput(id={'type': 'time-input-end-entry', 'index': entry_id}, value=end, class_name='time_input_in_card')
-                                        ]),
-                                    ]),
+                                dbc.Col(width={'size': 'auto'}, children=[
+                                    dbc.Button('×', id={'type': 'button-delete-entry', 'index': entry_id}, size='sm', outline=True, color='dark', n_clicks=0, className='entry'),
+                                ]),
+                            ]),
+                            dbc.Row(className='entry', children=[
+                                dbc.Col([
+                                    dcc.DatePickerSingle(
+                                        id={'type': 'entry-date-picker-single', 'index': entry_id}, className='date_picker_single',
+                                        display_format='Y/M/D', month_format='Y/M',
+                                        initial_visible_month=now, date=start,
+                                    ),
+                                ]),
+                                dbc.Col([
+                                    dmc.TimeInput(id={'type': 'time-input-start-entry', 'index': entry_id}, value=start, size='lg', class_name='time_input_in_entry')
+                                ]),
+                                dbc.Col([
+                                    dmc.TimeInput(id={'type': 'time-input-end-entry', 'index': entry_id}, value=end, size='lg', class_name='time_input_in_entry')
                                 ]),
                             ]),
                         ])
@@ -136,12 +143,19 @@ def layout(board_name=None):
                 modals.append(
                     dbc.Modal(id={'type': 'modal-card', 'index': card_id}, is_open=False, children=[
                         dbc.ModalBody([
-                            html.H4('Name'),
-                            dbc.Input(id={'type': 'modal-card-name', 'index': card_id}, value=card_data['name'], className='card_board', type='text'),
+                            dbc.Row(justify='between', children=[
+                                dbc.Col(width={'size': 'auto'}, children=[
+                                    html.H4('Name'),
+                                ]),
+                                dbc.Col(width={'size': 'auto'}, children=[
+                                    dbc.Button('×', id={'type': 'button-delete-card', 'index': card_id}, size='sm', outline=True, color='dark', n_clicks=0),
+                                ]),
+                            ]),
+                            dbc.Input(id={'type': 'modal-card-name', 'index': card_id}, value=card_data['name'], className='modal_component', type='text'),
                             html.H4('Description'),
-                            dbc.Textarea(id={'type': 'modal-card-desc', 'index': card_id}, value=card_data['desc'], className='card_board'),
+                            dbc.Textarea(id={'type': 'modal-card-desc', 'index': card_id}, value=card_data['desc'], className='modal_component'),
                             html.H4('Category'),
-                            dbc.Select(id={'type': 'modal-card-category', 'index': card_id}, options=OPTIONS, value=card_data['category']),
+                            dbc.Select(id={'type': 'modal-card-category', 'index': card_id}, options=OPTIONS, value=card_data['category'], className='modal_component'),
                             html.H4('Due'),
                             dbc.Row([
                                 dbc.Col(width={'size': 'auto'}, children=[
@@ -196,6 +210,7 @@ def layout(board_name=None):
             all_modals.append(
                 html.Div(id={'type': 'modals', 'index': list_id}, children=modals),
             )
+        PREV_N_ADD_LIST = 0
         PREV_N_LIST_TO_LEFT, PREV_N_LIST_TO_RIGHT = [None] * len(lists), [None] * len(lists)
         lists.append(
             html.Div(className='button_add_list', children=[
@@ -213,7 +228,7 @@ def layout(board_name=None):
             dbc.Modal(id='modal-add-list', is_open=False, children=[
                 dbc.ModalBody([
                     dbc.ModalTitle('Input list name.'),
-                    dbc.Input(id='input-list-name', className='card_board', type='text'),
+                    dbc.Input(id='input-list-name', className='modal_component', type='text'),
                     dbc.Button('Confirm', id='button-confirm-add-list', color='warning', n_clicks=0)
                 ])
             ]),
@@ -243,10 +258,12 @@ def add_list_toggle_modal(n1, n2, is_open):
      Output({'type': 'modal-card-date-picker-range', 'index': MATCH}, 'start_date'),
      Output({'type': 'modal-card-date-picker-range', 'index': MATCH}, 'end_date'),
      Output({'type': 'time-input-start-modal-card', 'index': MATCH}, 'value'),
-     Output({'type': 'time-input-due-modal-card', 'index': MATCH}, 'value')],
+     Output({'type': 'time-input-due-modal-card', 'index': MATCH}, 'value'),
+     Output({'type': 'button-delete-card', 'index': MATCH}, 'n_clicks')],
     [Input({'type': 'button-card-open-modal', 'index': MATCH}, 'n_clicks'),
      Input({'type': 'button-save-modal-card', 'index': MATCH}, 'n_clicks'),
      Input({'type': 'button-delete-due-modal-card', 'index': MATCH}, 'n_clicks'),
+     Input({'type': 'button-delete-card', 'index': MATCH}, 'n_clicks'),
      Input({'type': 'modal-card-name', 'index': MATCH}, 'value'),
      Input({'type': 'modal-card-desc', 'index': MATCH}, 'value')],
     [State({'type': 'modal-card', 'index': MATCH}, 'is_open'),
@@ -261,7 +278,7 @@ def add_list_toggle_modal(n1, n2, is_open):
      State({'type': 'time-input-due-modal-card', 'index': MATCH}, 'value')],
     prevent_initial_call=True
 )
-def card_toggle_modal(n1, n2, n3, name, desc, is_open, card_id_dict, card_children, color, category, check, start_date, due_date, start_time, due_time):
+def card_toggle_modal(n1, n2, n3, n4, name, desc, is_open, card_id_dict, card_children, color, category, check, start_date, due_date, start_time, due_time):
     global PREV_N1_CARD
     global PREV_N2_CARD
     global PREV_N3_CARD
@@ -318,7 +335,26 @@ def card_toggle_modal(n1, n2, n3, name, desc, is_open, card_id_dict, card_childr
         BOARD_DATA['card_data'][card_id]['start'] = None
         BOARD_DATA['card_data'][card_id]['due'] = None
         BOARD_DATA['card_data'][card_id]['hasTime'] = False
-    
+
+    elif n4:
+        is_open = not is_open
+
+        start_date, due_date, start_time, due_time, due = None, None, None, None, None
+        card_children = [
+            dbc.Row(justify='between', children=[
+                dbc.Col(width={'size': 'auto'}, children=[
+                    dbc.CardBody('Deleted'),
+                ]),
+            ])
+        ]
+        for list_id in BOARD_DATA['list']:
+            if card_id in BOARD_DATA['card'][list_id]:
+                BOARD_DATA['card'][list_id].remove(card_id)
+        for entry_id in BOARD_DATA['entry'][card_id]:
+            del BOARD_DATA['entry_data'][entry_id]
+        del BOARD_DATA['card_data'][card_id]
+        del BOARD_DATA['entry'][card_id]
+        
     color = None
     if due is not None:
         now = datetime.now(timezone.utc).astimezone()
@@ -333,52 +369,56 @@ def card_toggle_modal(n1, n2, n3, name, desc, is_open, card_id_dict, card_childr
     if check:
         color = 'success'
 
-    PREV_N1_CARD[card_id], PREV_N2_CARD[card_id], PREV_N3_CARD[card_id] = n1, n2, n3
+    PREV_N1_CARD[card_id], PREV_N2_CARD[card_id], PREV_N3_CARD[card_id], PREV_N4_CARD[card_id] = n1, n2, n3, n4
 
     with open(DATA_DIR/f'{BOARD_DATA["name"]}.json', 'w', encoding='utf-8') as f:
         json.dump(BOARD_DATA, f, ensure_ascii=False, indent=4)
 
-    return is_open, card_children, color, start_date, due_date, start_time, due_time
+    return is_open, card_children, color, start_date, due_date, start_time, due_time, 0
 
 
 @dash.callback(
-    Output({'type': 'entry-desc', 'index': MATCH}, 'value'),
-    [Input({'type': 'entry-desc', 'index': MATCH}, 'value'),
-     Input({'type': 'entry-date-picker-range', 'index': MATCH}, 'start_date'),
-     Input({'type': 'entry-date-picker-range', 'index': MATCH}, 'end_date'),
+    [Output({'type': 'entry', 'index': MATCH}, 'children'),
+     Output({'type': 'button-delete-entry', 'index': MATCH}, 'n_clicks')],
+    [Input({'type': 'button-delete-entry', 'index': MATCH}, 'n_clicks'),
+     Input({'type': 'entry-desc', 'index': MATCH}, 'value'),
+     Input({'type': 'entry-date-picker-single', 'index': MATCH}, 'date'),
      Input({'type': 'time-input-start-entry', 'index': MATCH}, 'value'),
      Input({'type': 'time-input-end-entry', 'index': MATCH}, 'value')],
-    [State({'type': 'entry-desc', 'index': MATCH}, 'id')],
+    [State({'type': 'entry', 'index': MATCH}, 'children'),
+     State({'type': 'entry-desc', 'index': MATCH}, 'id')],
     prevent_initial_call=True
 )
-def save_entry(desc, start_date, end_date, start_time, end_time, entry_id_dict):
+def save_entry(n_del_entry, desc, date, start_time, end_time, entry, entry_id_dict):
     entry_id = entry_id_dict['index']
 
-    start, start_string = None, None
-    if start_date is not None:
-        start_date = datetime.fromisoformat(start_date).astimezone()
-        start = start_date
-        if start_time is not None:
-            start_time = datetime.fromisoformat(start_time).astimezone()
-            start = datetime(year=start_date.year, month=start_date.month, day=start_date.day, hour=start_time.hour, minute=start_time.minute, second=start_time.second, tzinfo=start_time.tzinfo)
+    start_string, end_string = None, None
+    if date is not None and start_time is not None and end_time is not None:
+        date = datetime.fromisoformat(date).astimezone()
+
+        start_time = datetime.fromisoformat(start_time).astimezone()
+        start = datetime(year=date.year, month=date.month, day=date.day, hour=start_time.hour, minute=start_time.minute, second=start_time.second, tzinfo=start_time.tzinfo)
         start_string = start.isoformat()
-    end, end_string = None, None
-    if end_date is not None:
-        end_date = datetime.fromisoformat(end_date).astimezone()
-        end = end_date
-        if end_time is not None:
-            end_time = datetime.fromisoformat(end_time).astimezone()
-            end = datetime(year=end_date.year, month=end_date.month, day=end_date.day, hour=end_time.hour, minute=end_time.minute, second=end_time.second, tzinfo=end_time.tzinfo)
+        
+        end_time = datetime.fromisoformat(end_time).astimezone()
+        end = datetime(year=date.year, month=date.month, day=date.day, hour=end_time.hour, minute=end_time.minute, second=end_time.second, tzinfo=end_time.tzinfo)
         end_string = end.isoformat()
 
     BOARD_DATA['entry_data'][entry_id]['desc'] = desc
     BOARD_DATA['entry_data'][entry_id]['start'] = start_string
     BOARD_DATA['entry_data'][entry_id]['end'] = end_string
 
+    if n_del_entry:
+        entry = dbc.CardBody('Deleted')
+        for card_id in BOARD_DATA['card_data']:
+            if entry_id in BOARD_DATA['entry'][card_id]:
+                BOARD_DATA['entry'][card_id].remove(entry_id)
+        del BOARD_DATA['entry_data'][entry_id]
+
     with open(DATA_DIR/f'{BOARD_DATA["name"]}.json', 'w', encoding='utf-8') as f:
         json.dump(BOARD_DATA, f, ensure_ascii=False, indent=4)
 
-    return desc
+    return entry, 0
 
 
 @dash.callback(
@@ -488,12 +528,19 @@ def add_card(n_add_card, cards, list_id_dict, modals):
         modals.append(
             dbc.Modal(id={'type': 'modal-card', 'index': new_card_id}, is_open=False, children=[
                 dbc.ModalBody([
-                    html.H4('Name'),
-                    dbc.Input(id={'type': 'modal-card-name', 'index': new_card_id}, value='new card', className='card_board', type='text'),
+                    dbc.Row(justify='between', children=[
+                        dbc.Col(width={'size': 'auto'}, children=[
+                            html.H4('Name'),
+                        ]),
+                        dbc.Col(width={'size': 'auto'}, children=[
+                            dbc.Button('×', id={'type': 'button-delete-card', 'index': new_card_id}, size='sm', outline=True, color='dark', n_clicks=0),
+                        ]),
+                    ]),
+                    dbc.Input(id={'type': 'modal-card-name', 'index': new_card_id}, value='new card', className='modal_component', type='text'),
                     html.H4('Description'),
-                    dbc.Textarea(id={'type': 'modal-card-desc', 'index': new_card_id}, value='', className='card_board'),
+                    dbc.Textarea(id={'type': 'modal-card-desc', 'index': new_card_id}, value='', className='modal_component'),
                     html.H4('Category'),
-                    dbc.Select(id={'type': 'modal-card-category', 'index': new_card_id}, options=OPTIONS),
+                    dbc.Select(id={'type': 'modal-card-category', 'index': new_card_id}, options=OPTIONS, value=None, className='modal_component'),
                     html.H4('Due'),
                     dbc.Row([
                         dbc.Col(width={'size': 'auto'}, children=[
@@ -564,26 +611,27 @@ def add_entry(n_add_entry, entries, card_id_dict):
 
         new_entry_id = ''.join([random.choice(string.ascii_letters + string.digits) for _ in range(24)])
         new_entry = dbc.Card(id={'type': 'entry', 'index': new_entry_id}, className='card', children=[
-            dbc.Row(justify='between', children=[
-                dbc.Col(width={'size': 11}, children=[
+            dbc.Row(justify='between', className='entry', children=[
+                dbc.Col(width={'size': 10}, children=[
                     dbc.Input(id={'type': 'entry-desc', 'index': new_entry_id}, size='sm', value='new entry', className='entry', type='text'),
                 ]),
-                dbc.Col(width={'size': 'auto'}, className='entry', children=[
-                    dbc.Row([
-                        dcc.DatePickerRange(
-                            id={'type': 'entry-date-picker-range', 'index': new_entry_id}, className='date_picker_range',
-                            display_format='Y/M/D', month_format='Y/M',
-                            initial_visible_month=now, start_date=None, end_date=None,
-                        ),
-                    ]),
-                    dbc.Row([
-                        dbc.Col([
-                            dmc.TimeInput(id={'type': 'time-input-start-entry', 'index': new_entry_id}, value=None, class_name='time_input_in_card')
-                        ]),
-                        dbc.Col([
-                            dmc.TimeInput(id={'type': 'time-input-end-entry', 'index': new_entry_id}, value=None, class_name='time_input_in_card')
-                        ]),
-                    ]),
+                dbc.Col(width={'size': 'auto'}, children=[
+                    dbc.Button('×', id={'type': 'button-delete-entry', 'index': new_entry_id}, size='sm', outline=True, color='dark', n_clicks=0, className='entry'),
+                ]),
+            ]),
+            dbc.Row(className='entry', children=[
+                dbc.Col([
+                    dcc.DatePickerSingle(
+                        id={'type': 'entry-date-picker-single', 'index': new_entry_id}, className='date_picker_single',
+                        display_format='Y/M/D', month_format='Y/M',
+                        initial_visible_month=now, date=now,
+                    ),
+                ]),
+                dbc.Col([
+                    dmc.TimeInput(id={'type': 'time-input-start-entry', 'index': new_entry_id}, value=None, size='lg', class_name='time_input_in_entry')
+                ]),
+                dbc.Col([
+                    dmc.TimeInput(id={'type': 'time-input-end-entry', 'index': new_entry_id}, value=None, size='lg', class_name='time_input_in_entry')
                 ]),
             ]),
         ])

@@ -28,16 +28,14 @@ def layout():
             ])
         ])
         boards.append(board)
-    boards.append(
-        dbc.Button('+ Board', id='button-add-board', color='warning', className='button_add_board', n_clicks=0)
-    )
 
-    return dbc.Container(id='page', className='page', children=[
+    return html.Div(id='page', className='page', children=[
         html.Div(id='boards', children=boards),
+        dbc.Button('+ Board', id='button-add-board', color='warning', className='button_add_board', n_clicks=0),
         dbc.Modal(id='modal-add-board', is_open=False, children=[
             dbc.ModalBody([
                 dbc.ModalTitle('Input board name.'),
-                dbc.Input(id='input-board-name', className='card_board', type='text'),
+                dbc.Input(id='input-board-name', className='modal_component', type='text'),
                 dbc.Button('Confirm', id='button-confirm-add-board', color='warning', n_clicks=0)
             ])
         ])
