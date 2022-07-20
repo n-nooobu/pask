@@ -1,7 +1,5 @@
 import dash
 from dash import dcc, html, Input, Output, State
-from dash.dependencies import ClientsideFunction
-from dash_extensions.enrich import DashBlueprint
 import dash_bootstrap_components as dbc
 
 

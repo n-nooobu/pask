@@ -14,6 +14,15 @@
 }
 
 .card_board {
+    width: 300px;
+    margin-top: 0.6rem;
+    margin-bottom: 0.6rem;
+    margin-left: 0.6rem;
+    margin-right: 0.6rem;
+    display: inline-block;
+}
+
+.modal_component {
     margin-top: 0.6rem;
     margin-bottom: 0.6rem;
 }
@@ -24,9 +33,26 @@
 }
 
 .entry {
-    margin-top: 0.3rem;
-    margin-bottom: 0.3rem;
+    margin-top: 0.1rem;
+    margin-bottom: 0.1rem;
+    margin-left: 0.2rem;
+    margin-right: 0.2rem;
+}
+
+.timeline {
+    width: 400px;
+    border-radius: 5px;
+    padding: 10px;
     margin-left: 0.3rem;
+    margin-right: 0.3rem;
+    display: inline-block;
+}
+
+.timeline_card {
+    border-radius: 5px;
+    padding: 10px;
+    margin-left: 0.3rem;
+    margin-right: 0.3rem;
 }
 
 .date_picker_range {
@@ -34,11 +60,18 @@
     margin-bottom: 0.1rem;
 }
 
+.date_picker_single {
+    margin-left: 0.2rem;
+    margin-right: 0.2rem;
+}
+
 .button_add_board {
     border-radius: 5px;
     padding: 10px;
     margin-top: 0.6rem;
     margin-bottom: 0.6rem;
+    margin-left: 0.6rem;
+    margin-right: 0.6rem;
 }
 
 .button_add_list {
@@ -80,4 +113,8 @@
 
 .time_input_in_card {
     width: 130px;
+}
+
+.time_input_in_entry {
+    width: 120px;
 }
