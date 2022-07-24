@@ -99,7 +99,7 @@ def show_timeline(start_date, end_date):
                     html.P([
                         f"Card: {entry['card_name']}", html.Br(),
                         f"Category: {entry['category']}", html.Br(),
-                        f"Description: {entry['entry_desc']}",
+                        f"Description: {entry['entry_desc'] if len(entry['entry_desc']) < 40 else entry['entry_desc'][:40] + '...'}",
                     ]),
                 ])
             )
@@ -108,6 +108,6 @@ def show_timeline(start_date, end_date):
             html.Div(className='timeline', children=timeline)
         )
 
-    page_style = {'width': f'{60 + (len(date_list)) * 409}px'}
+    page_style = {'width': f'{60 + (len(date_list)) * 559}px'}
 
     return timelines, page_style
